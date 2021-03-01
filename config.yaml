@@ -1,5 +1,5 @@
 # Configuration File for Speedtest script
-output: ./measurements.csv
+output: data/measurements.csv
 output-keys:
   - timestamp
   - download
