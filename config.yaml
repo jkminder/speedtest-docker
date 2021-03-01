@@ -1,0 +1,12 @@
+# Configuration File for Speedtest script
+output: ./measurements.csv
+output-keys:
+  - timestamp
+  - download
+  - upload
+  - ping
+  - [server, name]
+  - [server, country]
+  - [server, id]
+timeout: 180
+interval: 600
