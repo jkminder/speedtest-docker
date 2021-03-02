@@ -4,7 +4,7 @@ import os
 import speedtest
 import signal
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import yaml
 import csv
 
@@ -36,6 +36,15 @@ def perform_speedtest(threads=None, servers=[]):
 
     return s.results.dict()
 
+# convert timestamp to readable local time
+def convert_timestamp(timestamp):
+    timestamp = timestamp[:timestamp.index(".")]
+    timestamp = timestamp.replace("T"," ")
+    d = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    d=d.replace(tzinfo=timezone.utc) #Convert it to an aware datetime object in UTC time.
+    d=d.astimezone() #Convert it to your local timezone (still aware)
+    return str(d.strftime("%Y-%m-%d %H:%M:%S"))
+
 # Parse results to csv compatible format
 def parse_to_csv(results, keys):
     output = []
@@ -47,8 +56,7 @@ def parse_to_csv(results, keys):
         else:
             value = results[key]
             if key == "timestamp":
-                value = value[:value.index(".")]
-                value = value.replace("T"," ")
+                value = convert_timestamp(value)
             elif key in ("upload", "download"):
                 value = "%0.2f" % (float(value) / 1000.0 / 1000.0)
             output.append(value)
@@ -58,7 +66,7 @@ def parse_to_csv(results, keys):
 def setup_file(file_path, output_keys):
     units = {"upload":"Mbit/s", "download":"Mbit/s","ping":"s"}
     header = [key if isinstance(key, str) else "_".join(key) for key in output_keys]
-    
+
     # add units to header
     header = [f"{key} [{units[key]}]" if key in units.keys() else key for key in header]
     write_header = False
@@ -75,7 +83,7 @@ def setup_file(file_path, output_keys):
         with open(file_path, "a") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(header)
-            
+
 # Write line
 def write_line(file_path, line):
     with open(file_path, "a") as csvfile:
@@ -102,10 +110,10 @@ def main(config):
 
     # Register signal function handler
     signal.signal(signal.SIGALRM, handler)
-    
+
     # Setup file
     setup_file(config["output"], config["output-keys"])
-    
+
     download_idx = config["output-keys"].index("download")
     upload_idx = config["output-keys"].index("upload")
 
@@ -124,7 +132,7 @@ def main(config):
             line = parse_to_csv(results, config["output-keys"])
             # Write to file
             write_line(config["output"], line)
-            
+
             print(f"Current: down={line[download_idx]}Mbit/s up={line[upload_idx]}Mbit/s ping={results['ping']}s ## Runtime={timedelta(seconds=int(time.time()-start))} Measurements={measurements}", end="\r")
 
         except (TimeoutError, speedtest.SpeedtestException) as e:
@@ -140,4 +148,3 @@ if __name__ == "__main__":
     config = read_config()
     print_config(config)
     main(config)
-    
