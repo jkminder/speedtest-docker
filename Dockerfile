@@ -5,4 +5,4 @@ COPY config.yaml .
 RUN pip install speedtest-cli
 RUN pip install pyyaml
 
-CMD [ "python", "main.py" ]
+CMD [ "python", "-u", "main.py" ]

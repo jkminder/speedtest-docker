@@ -133,7 +133,7 @@ def main(config):
             # Write to file
             write_line(config["output"], line)
 
-            print(f"Current: down={line[download_idx]}Mbit/s up={line[upload_idx]}Mbit/s ping={results['ping']}s ## Runtime={timedelta(seconds=int(time.time()-start))} Measurements={measurements}", end="\r")
+            print(f"\rCurrent: down={line[download_idx]}Mbit/s up={line[upload_idx]}Mbit/s ping={results['ping']}s ## Runtime={timedelta(seconds=int(time.time()-start))} Measurements={measurements}     ", end="")
 
         except (TimeoutError, speedtest.SpeedtestException) as e:
             write_timeout(config["output"], config["output-keys"], str(e))
